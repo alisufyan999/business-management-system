@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteDialog } from "@/components/catalog/delete-dialog";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatPKR } from "@/lib/format";
 import { supplierAddress } from "@/lib/purchase-fields";
 import * as purchasesService from "@/lib/services/purchases.service";
@@ -88,21 +89,42 @@ export function SuppliersView() {
     }
   }
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("suppliers"),
+      ["Supplier", "Contact person", "Phone", "Email", "Address", "Total purchased"],
+      filtered.map((supplier) => [
+        supplier.name,
+        supplier.contactName,
+        supplier.phone,
+        supplier.email ?? "",
+        supplierAddress(supplier),
+        formatPKR(totals.get(supplier.id) ?? 0),
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Suppliers"
         description="Wholesale contacts and how much has been bought from each."
         action={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus />
-            Add Supplier
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus />
+              Add Supplier
+            </Button>
+          </div>
         }
       />
       <Input

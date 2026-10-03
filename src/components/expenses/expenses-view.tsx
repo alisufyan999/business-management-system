@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog } from "@/components/catalog/delete-dialog";
@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatDisplayDate, formatPaymentMethod, formatPKR } from "@/lib/format";
 import { todayKey } from "@/lib/sale-fields";
 import * as expensesService from "@/lib/services/expenses.service";
@@ -93,22 +94,42 @@ export function ExpensesView() {
     }
   }
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("expenses"),
+      ["Date", "Category", "Description", "Amount", "Method"],
+      filtered.map((expense) => [
+        formatDisplayDate(expense.date),
+        expenseCategoryLabel(expense.category),
+        expense.description,
+        formatPKR(expense.amount),
+        formatPaymentMethod(expense.paymentMethod),
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Expenses"
         description="Operating costs. Salary rows are created when you pay an employee."
         action={
-          <Button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus />
-            Add expense
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus />
+              Add expense
+            </Button>
+          </div>
         }
       />
 

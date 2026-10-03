@@ -1,3 +1,9 @@
+import { format } from "date-fns";
+
+export function csvExportFilename(prefix: string, today = new Date()): string {
+  return `${prefix}-export-${format(today, "yyyy-MM-dd")}.csv`;
+}
+
 function escapeCell(value: string | number): string {
   const text = String(value);
   if (/[",\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;

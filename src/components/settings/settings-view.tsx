@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { FieldError } from "@/components/catalog/field";
+import { BackupBanner } from "@/components/settings/backup-banner";
+import { DataManagement } from "@/components/settings/data-management";
 import { LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +42,8 @@ export function SettingsView() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <PageHeader title="Settings" description="Company details, display preferences, and the demo sign-in password." />
+      <PageHeader title="Settings" description="Company details, display preferences, the demo sign-in password, and data backups." />
+      <BackupBanner />
       {loading ? <LoadingRows /> : null}
       {error ? <LoadError message={error} onRetry={reload} /> : null}
       {data ? (
@@ -56,6 +59,7 @@ export function SettingsView() {
             onSaved={reload}
           />
           <PasswordForm />
+          <DataManagement />
         </>
       ) : null}
     </div>

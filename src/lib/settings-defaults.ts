@@ -14,6 +14,7 @@ export interface AppSettings {
   currencySymbol: string;
   dateFormat: DateFormat;
   password: string;
+  lastBackupAt?: string;
 }
 
 export const defaultSettings: AppSettings = {

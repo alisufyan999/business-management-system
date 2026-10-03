@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
 import { PurchaseDetail } from "@/components/purchases/purchase-detail";
 import { PurchaseForm } from "@/components/purchases/purchase-form";
@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatDisplayDate, formatPaymentMethod, formatPKR } from "@/lib/format";
 import { purchasePaymentMethod, purchasePaymentStatus } from "@/lib/purchase-fields";
 import * as productsService from "@/lib/services/products.service";
@@ -73,16 +74,40 @@ export function PurchasesView() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
   }, [purchases, supplierId, status, from, to]);
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("purchases"),
+      ["Date", "Supplier", "Product", "Qty", "Unit cost", "Total", "Method", "Status", "Notes"],
+      filtered.map((purchase) => [
+        formatDisplayDate(purchase.date),
+        purchase.supplierName,
+        purchase.productName,
+        purchase.quantity,
+        formatPKR(purchase.unitCost),
+        formatPKR(purchase.total),
+        formatPaymentMethod(purchasePaymentMethod(purchase)),
+        purchasePaymentStatus(purchase) === "pending" ? "Pending" : "Paid",
+        purchase.notes?.trim() ?? "",
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Purchases"
         description="Stock bought from suppliers. A new purchase increases quantity on hand."
         action={
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus />
-            New Purchase
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus />
+              New Purchase
+            </Button>
+          </div>
         }
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

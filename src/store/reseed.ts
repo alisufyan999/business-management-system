@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { KEEP_DATA_KEY } from "@/lib/backup";
 import {
   creditLedger,
   customers,
@@ -40,6 +41,7 @@ async function reseedIfNeeded(): Promise<void> {
   ]);
 
   if (typeof window === "undefined") return;
+  if (window.localStorage.getItem(KEEP_DATA_KEY) === "1") return;
 
   const today = format(new Date(), "yyyy-MM-dd");
   if (window.localStorage.getItem(DATA_DAY_KEY) === today) return;

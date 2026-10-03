@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatDisplayDate, formatPKR } from "@/lib/format";
 import { todayKey } from "@/lib/sale-fields";
 import * as employeesService from "@/lib/services/employees.service";
@@ -123,22 +124,43 @@ export function EmployeesView() {
     }
   }
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("employees"),
+      ["Name", "Role", "Phone", "Monthly salary", "Joined", "Status"],
+      employees.map((employee) => [
+        employee.name,
+        employee.role,
+        employee.phone,
+        formatPKR(employee.monthlySalary),
+        formatDisplayDate(employee.joinDate),
+        isActive(employee) ? "Active" : "Inactive",
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Employees"
         description="Staff records and monthly salary payments."
         action={
-          <Button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus />
-            Add employee
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus />
+              Add employee
+            </Button>
+          </div>
         }
       />
 

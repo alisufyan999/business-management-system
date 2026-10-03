@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteDialog } from "@/components/catalog/delete-dialog";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
 import { formatPKR } from "@/lib/format";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { customerTypeLabel, outstandingBalance } from "@/lib/sale-fields";
 import * as creditService from "@/lib/services/credit.service";
 import * as customersService from "@/lib/services/customers.service";
@@ -122,21 +123,42 @@ export function CustomersView() {
     }
   }
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("customers"),
+      ["Name", "Phone", "Email", "Type", "Total purchases", "Outstanding"],
+      filtered.map((customer) => [
+        customer.name,
+        customer.phone ?? "",
+        customer.email ?? "",
+        customerTypeLabel[customer.type],
+        formatPKR(purchaseTotals.get(customer.id) ?? 0),
+        formatPKR(balances.get(customer.id) ?? 0),
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Customers"
         description="Walk-in, regular, and credit customers, with live purchase and balance totals."
         action={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus />
-            Add Customer
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus />
+              Add Customer
+            </Button>
+          </div>
         }
       />
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { FinancialOverview } from "@/components/dashboard/financial-overview";
 import { LowStockWidget } from "@/components/dashboard/low-stock";
+import { BackupBanner } from "@/components/settings/backup-banner";
 import { PaymentChart } from "@/components/dashboard/payment-chart";
 import { PendingCreditWidget } from "@/components/dashboard/pending-credit";
 import { RecentSalesTable } from "@/components/dashboard/recent-sales";
@@ -24,10 +26,13 @@ import {
 } from "@/lib/dashboard-metrics";
 import * as creditService from "@/lib/services/credit.service";
 import * as employeesService from "@/lib/services/employees.service";
+import * as expensesService from "@/lib/services/expenses.service";
+import * as paymentsService from "@/lib/services/payments.service";
 import * as productsService from "@/lib/services/products.service";
+import * as purchasesService from "@/lib/services/purchases.service";
 import * as salesService from "@/lib/services/sales.service";
 import { useSettingsStore } from "@/store/settings.store";
-import type { CreditLedgerEntry, Product, Sale } from "@/lib/types";
+import type { CreditLedgerEntry, Expense, Payment, Product, Purchase, Sale } from "@/lib/types";
 
 interface DashboardData {
   todaySales: number;
@@ -39,14 +44,23 @@ interface DashboardData {
   recent: Sale[];
   lowStock: Product[];
   pendingCredit: CreditLedgerEntry[];
+  expenses: Expense[];
+  purchases: Purchase[];
+  payments: Payment[];
+  sales: Sale[];
+  products: Product[];
+  credits: CreditLedgerEntry[];
 }
 
 async function loadDashboard(): Promise<DashboardData> {
-  const [sales, products, credits, employees] = await Promise.all([
+  const [sales, products, credits, employees, expenses, purchases, payments] = await Promise.all([
     salesService.getAll(),
     productsService.getAll(),
     creditService.getAll(),
     employeesService.getAll(),
+    expensesService.getAll(),
+    purchasesService.getAll(),
+    paymentsService.getAll(),
   ]);
 
   return {
@@ -59,6 +73,12 @@ async function loadDashboard(): Promise<DashboardData> {
     recent: recentSales(sales),
     lowStock: lowStockProducts(products),
     pendingCredit: pendingCreditEntries(credits),
+    expenses,
+    purchases,
+    payments,
+    sales,
+    products,
+    credits,
   };
 }
 
@@ -70,6 +90,14 @@ function DashboardSkeleton() {
           <Skeleton key={index} className="h-32 rounded-xl" />
         ))}
       </div>
+      <Skeleton className="h-16 rounded-xl" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }, (_, index) => (
+          <Skeleton key={index} className="h-28 rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-40 rounded-xl" />
+      <Skeleton className="h-80 rounded-xl" />
       <div className="grid gap-4 lg:grid-cols-3">
         <Skeleton className="h-96 rounded-xl lg:col-span-2" />
         <Skeleton className="h-96 rounded-xl" />
@@ -113,6 +141,7 @@ export function DashboardView() {
           {format(new Date(), "EEEE, d MMMM yyyy")} · {businessName}
         </p>
       </div>
+      <BackupBanner />
       {loading ? <DashboardSkeleton /> : null}
       {!loading && error ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
@@ -137,6 +166,16 @@ export function DashboardView() {
             stockValue={data.stockValue}
             outstandingCredit={data.outstandingCredit}
             employeeCount={data.employeeCount}
+          />
+          <FinancialOverview
+            records={{
+              sales: data.sales,
+              products: data.products,
+              expenses: data.expenses,
+              purchases: data.purchases,
+              payments: data.payments,
+              credits: data.credits,
+            }}
           />
           <div className="grid gap-4 lg:grid-cols-3">
             <SalesChart data={data.salesSeries} />

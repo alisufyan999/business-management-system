@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteDialog } from "@/components/catalog/delete-dialog";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
@@ -33,11 +33,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatPKR } from "@/lib/format";
 import * as productsService from "@/lib/services/products.service";
 import * as purchasesService from "@/lib/services/purchases.service";
 import * as salesService from "@/lib/services/sales.service";
-import { laptopBrands, productCategories, specSummary, stockStatus } from "@/lib/stock";
+import { laptopBrands, productCategories, specSummary, stockStatus, stockStatusLabel } from "@/lib/stock";
 import type { Product, Purchase, Sale } from "@/lib/types";
 
 interface InventoryData {
@@ -99,21 +100,44 @@ export function InventoryView() {
     }
   }
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("inventory"),
+      ["Name", "Brand", "Category", "Specs", "Purchase cost", "Selling price", "Qty", "Status"],
+      filtered.map((product) => [
+        product.name,
+        product.brand,
+        product.category,
+        specSummary(product),
+        formatPKR(product.purchaseCost),
+        formatPKR(product.sellingPrice),
+        product.quantity,
+        stockStatusLabel(stockStatus(product)),
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Inventory"
         description="Laptops in stock, cost, and selling price."
         action={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus />
-            Add Product
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportRows}>
+              <Download />
+              Export CSV
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus />
+              Add Product
+            </Button>
+          </div>
         }
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

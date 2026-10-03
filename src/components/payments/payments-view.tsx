@@ -1,7 +1,9 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { EmptyState, LoadError, LoadingRows, PageHeader } from "@/components/catalog/page-states";
+import { Button } from "@/components/ui/button";
 import { PaymentChart } from "@/components/dashboard/payment-chart";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { useEntityList } from "@/hooks/use-entity-list";
 import type { PaymentSlice } from "@/lib/dashboard-metrics";
+import { csvExportFilename, downloadCsv } from "@/lib/csv";
 import { formatDisplayDate, formatPaymentMethod, formatPKR } from "@/lib/format";
 import { todayKey } from "@/lib/sale-fields";
 import * as paymentsService from "@/lib/services/payments.service";
@@ -77,11 +80,32 @@ export function PaymentsView() {
     total: filtered.filter((payment) => payment.method === item).reduce((sum, payment) => sum + payment.amount, 0),
   }));
 
+  function exportRows() {
+    downloadCsv(
+      csvExportFilename("payments"),
+      ["Date", "Type", "Customer", "Amount", "Method", "Notes"],
+      filtered.map((payment) => [
+        formatDisplayDate(payment.date),
+        typeLabel(payment.referenceType),
+        payment.partyName,
+        formatPKR(payment.amount),
+        formatPaymentMethod(payment.method),
+        payment.notes ?? "",
+      ]),
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <PageHeader
         title="Payments"
         description="Payments are created from a sale or a credit repayment. This log is read only."
+        action={
+          <Button type="button" variant="outline" onClick={exportRows}>
+            <Download />
+            Export CSV
+          </Button>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
